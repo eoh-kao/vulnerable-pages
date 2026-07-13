@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vulnerable Pages</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+  <h1>Vulnerable Pages</h1>
+
+  <div class="card">
+    <h2>1. DOM-based XSS <span class="tag vuln">XSS</span></h2>
+    <p>URL パラメータをサニタイズせず <code>innerHTML</code> に挿入している例です。</p>
+    <a href="dom-xss.html?name=%3Cimg%20src%3Dx%20onerror%3D%22alert('DOM+XSS')%22%3E">攻撃例を試す →</a>
+    /
+    <a href="dom-xss.html">ページを見る</a>
+  </div>
+
+  <footer>
+    社内セキュリティテスト用デモ
+  </footer>
+</body>
+</html>
