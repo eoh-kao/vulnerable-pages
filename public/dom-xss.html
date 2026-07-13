@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>DOM-based XSS デモ</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="banner">⚠️ 社内学習用の意図的な脆弱性テストです（DOM-based XSS / CWE-79）</div>
+  <p><a href="index.html">← トップに戻る</a></p>
+
+  <h1>DOM-based XSS <span class="tag vuln">VULNERABLE</span></h1>
+
+  <div class="card">
+    <p>
+      URL の <code>?name=</code> パラメータを、サニタイズせずにそのまま
+      <code>innerHTML</code> に代入して表示しています。
+    </p>
+    <p>攻撃例（URL）:</p>
+    <pre>dom-xss.html?name=&lt;img src=x onerror="alert('DOM XSS')"&gt;</pre>
+
+    <p>お名前を入力してみてください:</p>
+    <input type="text" id="nameInput" placeholder="山田太郎 または <img src=x onerror=alert(1)>" />
+    <button id="greetBtn">挨拶を表示</button>
+
+    <div id="greeting" class="result-box"></div>
+  </div>
+
+  <script>
+    // VULNERABLE: URL クエリパラメータや入力値を検証せずに innerHTML へ挿入している。
+    // 攻撃者が細工した ?name=<img src=x onerror=...> のような URL を
+    // 被害者に踏ませることで、被害者のブラウザ上で任意の JavaScript を実行できる（DOM-based XSS）。
+    function render(name) {
+      const el = document.getElementById('greeting');
+      el.innerHTML = 'こんにちは、' + name + ' さん!'; // ← ここが脆弱ポイント
+    }
+
+    // FIX: 本来は以下のいずれかで対策する。
+    //   1. innerHTML ではなく textContent を使う（HTML として解釈させない）
+    //        el.textContent = 'こんにちは、' + name + ' さん!';
+    //   2. どうしても HTML を組み立てる必要がある場合は DOMPurify 等でサニタイズする
+    //        el.innerHTML = DOMPurify.sanitize('こんにちは、' + name + ' さん!');
+    //   3. URL パラメータは信頼できない外部入力として扱い、常にエスケープ処理を行う
+
+    const params = new URLSearchParams(window.location.search);
+    const nameFromUrl = params.get('name');
+    if (nameFromUrl) {
+      render(nameFromUrl);
+    }
+
+    document.getElementById('greetBtn').addEventListener('click', () => {
+      const value = document.getElementById('nameInput').value || 'ゲスト';
+      render(value);
+    });
+  </script>
+</body>
+</html>
