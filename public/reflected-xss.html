@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reflected XSS テスト</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="banner">⚠️ 意図的な脆弱性テストです（Reflected XSS / CWE-79）</div>
+  <p><a href="index.html">← トップに戻る</a></p>
+
+  <h1>Reflected XSS <span class="tag vuln">VULNERABLE</span></h1>
+
+  <div class="card">
+    <p>
+      検索フォームに入力した文字列を「検索結果」としてそのままページに書き戻しています。
+      本来サーバーサイドで発生する反射型 XSS を、静的サイト上で <code>document.write</code> により再現したものです。
+    </p>
+    <p>攻撃例（URL）:</p>
+    <pre>reflected-xss.html?q=&lt;script&gt;alert('Reflected XSS')&lt;/script&gt;</pre>
+
+    <form id="searchForm">
+      <input type="text" id="searchInput" name="q" placeholder="検索キーワード" />
+      <button type="submit">検索</button>
+    </form>
+
+    <div id="searchResult" class="result-box"></div>
+  </div>
+
+  <script>
+    // VULNERABLE: クエリパラメータ q の値を、そのまま HTML として document.write / innerHTML してしまっている。
+    // 攻撃者が細工した検索用 URL（?q=<script>...）を SNS やメールでばら撒き、
+    // 被害者に踏ませることで被害者のブラウザ上でスクリプトを実行させる（反射型 XSS）。
+    function showResult(query) {
+      const box = document.getElementById('searchResult');
+      box.innerHTML = '「' + query + '」の検索結果: 0件見つかりました。'; // ← ここが脆弱ポイント
+    }
+
+    // FIX: 対策としては以下のいずれかを行う。
+    //   1. textContent を使い HTML として解釈させない
+    //   2. サーバー/フレームワーク側の自動エスケープ（React の {}, Go template の html/template 等）を利用する
+    //   3. 出力前に HTML エスケープ関数を通す（&, <, >, ", ' を実体参照に変換）
+    //   4. レスポンスに適切な Content-Security-Policy を設定し、インラインスクリプトの実行を防ぐ
+
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+      document.getElementById('searchInput').value = q;
+      showResult(q);
+    }
+
+    document.getElementById('searchForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const value = document.getElementById('searchInput').value;
+      showResult(value);
+    });
+  </script>
+</body>
+</html>
