@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ログイン - Example Bank（Tabnabbing 実演用のダミーページ）</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="banner">
+    ⚠️ これは Tabnabbing の危険性を実演するためだけのダミーページです。
+  </div>
+  <p><a href="unsafe-links.html">← テストページに戻る</a></p>
+
+  <h1>「Example Bank」ログイン（フェイク）</h1>
+  <div class="card">
+    <p id="status">元のタブを書き換えています…</p>
+  </div>
+
+  <script>
+    // VULNERABLE 側の実演: このページ自体は「攻撃者が用意したページ」の役をしている。
+    // unsafe-links.html が target="_blank" のみで rel="noopener" を付けずにこのページを開いた場合、
+    // window.opener を通じて "元のタブ" の window.location を書き換えることができてしまう
+    // （Reverse Tabnabbing）。ここでは実害のないよう、元タブを本テストの注意書きページに戻すだけにしている。
+    if (window.opener) {
+      document.getElementById('status').textContent =
+        'window.opener が取得できました（rel="noopener" が無いため）。本来はここでフィッシングサイトに差し替えられます。';
+      try {
+        window.opener.location.href = 'unsafe-links.html#tabnabbing-demonstrated';
+      } catch (e) {
+        // クロスオリジンやブラウザ設定により失敗する場合もある
+      }
+    } else {
+      document.getElementById('status').textContent =
+        'window.opener が取得できませんでした（rel="noopener" が効いている、または直接アクセスしています）。';
+    }
+  </script>
+</body>
+</html>

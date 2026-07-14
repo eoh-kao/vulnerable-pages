@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>安全でない外部リンク テスト</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="banner">⚠️ 意図的な脆弱性テストです（Tabnabbing / オープンリダイレクト）</div>
+  <p><a href="index.html">← トップに戻る</a></p>
+
+  <h1 id="tabnabbing-demonstrated">安全でない外部リンク <span class="tag vuln">VULNERABLE</span></h1>
+
+  <div class="card">
+    <h2>1. Reverse Tabnabbing（<code>target="_blank"</code> の rel 属性不備）</h2>
+    <p>
+      下のリンクは <code>target="_blank"</code> だけを指定し、<code>rel="noopener noreferrer"</code>
+      を付けていません。開いた先のページ（<a href="evil-tab.html">evil-tab.html</a>、実演用ダミー）から
+      <code>window.opener</code> 経由で元のタブを書き換えられてしまいます。
+    </p>
+
+    <!-- VULNERABLE: rel="noopener noreferrer" が無いため、リンク先ページに window.opener を渡してしまう -->
+    <p><a href="evil-tab.html" target="_blank">別タブでダミーページを開く（rel 属性なし）</a></p>
+
+    <p>クリック後、このタブの内容が自動的に書き換わっていたら Tabnabbing 成功です（無害なテストです）。</p>
+
+    <p><strong>FIX:</strong></p>
+    <pre>&lt;a href="evil-tab.html" target="_blank" rel="noopener noreferrer"&gt;安全なリンク&lt;/a&gt;</pre>
+  </div>
+
+  <div class="card">
+    <h2>2. 未検証オープンリダイレクト</h2>
+    <p>
+      <a href="redirect.html?url=https://example.com/">redirect.html?url=...</a> は、
+      渡された URL をドメイン検証せずそのまま遷移先候補として扱っています。
+      フィッシングメールの文面に「自社ドメイン + このパラメータ」を仕込むことで、
+      利用者に「信頼できるリンクだ」と誤認させたまま外部の偽サイトへ誘導できてしまいます。
+    </p>
+    <p><a href="redirect.html?url=https://example.com/fake-login">攻撃例を試す（安全な example.com にリダイレクトする例）</a></p>
+  </div>
+</body>
+</html>

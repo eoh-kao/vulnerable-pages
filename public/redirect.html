@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>リダイレクト中... テスト</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="banner">⚠️ 意図的な脆弱性テストです（未検証オープンリダイレクト / CWE-601）</div>
+  <p><a href="unsafe-links.html">← テストページに戻る</a></p>
+
+  <h1>リダイレクト中...</h1>
+  <div class="card">
+    <p id="msg">遷移先を確認しています…</p>
+  </div>
+
+  <script>
+    // VULNERABLE: ?url= に渡された値をドメイン検証せずそのままリダイレクト先として使っている。
+    // 一見すると "信頼できる自社ドメインのリンク" に見えるため、
+    // フィッシングメールなどで悪用され、被害者を偽サイトへ誘導するのに使われる（オープンリダイレクト）。
+    //   例: https://this-site.example/redirect.html?url=https://evil.example/fake-login
+    const params = new URLSearchParams(window.location.search);
+    const dest = params.get('url');
+    const msg = document.getElementById('msg');
+
+    if (dest) {
+      msg.textContent = `${dest} へリダイレクトします（検証なし）`;
+      // 実演のため実際の遷移は行わず、リンクとして提示する
+      const a = document.createElement('a');
+      a.href = dest;
+      a.textContent = dest;
+      msg.appendChild(document.createElement('br'));
+      msg.appendChild(a);
+    } else {
+      msg.textContent = '?url=<遷移先URL> を指定してください。';
+    }
+
+    // FIX: 本来は以下のように許可リストで検証する。
+    //   const ALLOWED_HOSTS = ['example.com', 'sub.example.com'];
+    //   const url = new URL(dest, window.location.origin);
+    //   if (!ALLOWED_HOSTS.includes(url.hostname)) {
+    //     throw new Error('許可されていないリダイレクト先です');
+    //   }
+    //   window.location.href = url.toString();
+    // もしくは、外部リダイレクトを行わず相対パスのみを許可する設計にする。
+  </script>
+</body>
+</html>
