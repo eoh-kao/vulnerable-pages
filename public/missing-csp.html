@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CSP / セキュリティヘッダー不備 テスト</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <!--
+    VULNERABLE: Content-Security-Policy が一切設定されていない（meta タグも HTTP レスポンスヘッダーも無し）。
+    そのため、もし他の脆弱性（XSS 等）によって任意の HTML/JS が注入された場合、
+    それを実行させないための「最後の防御線」が存在しない状態になっている。
+  -->
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="banner">⚠️ 意図的な脆弱性テストです（CSP / セキュリティヘッダー不備）</div>
+  <p><a href="index.html">← トップに戻る</a></p>
+
+  <h1>CSP・セキュリティヘッダーの不備 <span class="tag vuln">VULNERABLE</span></h1>
+
+  <div class="card">
+    <p>
+      このページ（およびサイト全体）には <code>Content-Security-Policy</code> が設定されていません。
+      そのため、インラインスクリプトや外部スクリプトが無条件に実行できてしまいます。
+    </p>
+    <p>下のボタンは、インラインの <code>onclick</code> ハンドラをそのまま実行します（CSP があればブロックされます）。</p>
+    <button onclick="document.getElementById('out').textContent = 'インラインスクリプトが実行されました（CSP なし）';">
+      インラインスクリプトを実行してみる
+    </button>
+    <div id="out" class="result-box"></div>
+  </div>
+
+  <div class="card">
+    <h2>本来設定すべきセキュリティヘッダーの例</h2>
+    <pre>
+Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+    </pre>
+    <p>
+      <strong>備考:</strong> GitLab Pages で任意の HTTP レスポンスヘッダーを付与できるかどうかは
+      GitLab のバージョンや設定に依存します。確実に付与したい場合は、Pages の前段に
+      CDN／リバースプロキシ（Cloudflare, CloudFront 等）を置いてヘッダーを付与する構成が安全です。
+      詳細は必ず最新の GitLab Pages 公式ドキュメントを確認してください（未確認の情報です）。
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>FIX（考え方）</h2>
+    <ul>
+      <li>まずは <code>script-src 'self'</code> のように厳格な CSP から始め、必要な範囲だけ緩める</li>
+      <li>インラインスクリプト（<code>onclick="..."</code> や <code>&lt;script&gt;...&lt;/script&gt;</code>）は避け、外部 JS ファイル + イベントリスナーに置き換える</li>
+      <li>やむを得ずインラインを許可する場合は nonce / hash ベースの CSP を使う</li>
+      <li>CSP はあくまで多層防御の一つであり、XSS 自体を作り込まないこと（サニタイズ・エスケープ）が最優先</li>
+    </ul>
+  </div>
+</body>
+</html>
