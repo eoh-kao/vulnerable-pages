@@ -15,10 +15,14 @@
   <div class="card">
     <p>
       検索フォームに入力した文字列を「検索結果」としてそのままページに書き戻しています。
-      本来サーバーサイドで発生する反射型 XSS を、静的サイト上で <code>document.write</code> により再現したものです。
+      本来サーバーサイドで発生する反射型 XSS を、静的サイト上で <code>innerHTML</code> により再現したものです。
+    </p>
+    <p>
+      <strong>注意:</strong> <code>innerHTML</code> に挿入された <code>&lt;script&gt;</code> は
+      ブラウザ仕様により実行されません。実際に発火させるには、下記のようにイベントハンドラを持つ要素を使います。
     </p>
     <p>攻撃例（URL）:</p>
-    <pre>reflected-xss.html?q=&lt;script&gt;alert('Reflected XSS')&lt;/script&gt;</pre>
+    <pre>reflected-xss.html?q=&lt;img src=x onerror="alert('Reflected XSS')"&gt;</pre>
 
     <form id="searchForm">
       <input type="text" id="searchInput" name="q" placeholder="検索キーワード" />
@@ -29,8 +33,8 @@
   </div>
 
   <script>
-    // VULNERABLE: クエリパラメータ q の値を、そのまま HTML として document.write / innerHTML してしまっている。
-    // 攻撃者が細工した検索用 URL（?q=<script>...）を SNS やメールでばら撒き、
+    // VULNERABLE: クエリパラメータ q の値を、そのまま HTML として innerHTML に挿入してしまっている。
+    // 攻撃者が細工した検索用 URL（?q=<img src=x onerror=...>）を SNS やメールでばら撒き、
     // 被害者に踏ませることで被害者のブラウザ上でスクリプトを実行させる（反射型 XSS）。
     function showResult(query) {
       const box = document.getElementById('searchResult');

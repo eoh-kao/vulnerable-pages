@@ -25,13 +25,14 @@
     const msg = document.getElementById('msg');
 
     if (dest) {
-      msg.textContent = `${dest} へリダイレクトします（検証なし）`;
-      // 実演のため実際の遷移は行わず、リンクとして提示する
+      msg.textContent = `${dest} へリダイレクトします（検証なし）…`;
+      // JavaScript が無効／ブロックされた環境向けのフォールバックリンク（説明用）
       const a = document.createElement('a');
       a.href = dest;
       a.textContent = dest;
       msg.appendChild(document.createElement('br'));
       msg.appendChild(a);
+      window.location.href = dest;
     } else {
       msg.textContent = '?url=<遷移先URL> を指定してください。';
     }
